@@ -1,0 +1,23 @@
+<!-- find a good spot where to add the calendar picker, probably the popup.liquid, mini-cart-items.liquid, etc. It depends on the theme. -->
+
+              <!-- Start of date picker -->
+                <div class="cart-item__property">
+                  <label for="delivery-date">Select Delivery Date:</label>
+                  <input
+                    type="date"
+                    id="delivery-date"
+                    name="attributes[Delivery Date]"
+                    value="{{ cart.attributes['Delivery Date'] }}"
+                    min="{{ 'now' | date: '%s' | plus: 86400 | date: '%Y-%m-%d' }}"
+                  >
+                </div>
+                <!-- Hidden note field to mirror the selected date -->
+                <textarea
+                  id="delivery-date-note"
+                  name="note"
+                  class="hidden"
+                >
+  Delivery Date: {{ cart.attributes['Delivery Date'] }}
+</textarea>
+
+                <!-- End of day picker -->
