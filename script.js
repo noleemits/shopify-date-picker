@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
   const dateInput = document.getElementById("delivery-date");
-  if (!dateInput) return; // 👈 Exit early if not on a cart/cart drawer page
 
-  // CONFIGURATION
+  if (!dateInput) return;
+
   const targetsToDisable = ['#CartDrawer-Checkout', '.shop-pay-button'];
   const targetsToHide = ['.promo-banner'];
   const noteFieldId = 'delivery-date-note';
@@ -14,13 +14,13 @@ document.addEventListener("DOMContentLoaded", function () {
       noteField.name = 'note';
       noteField.id = noteFieldId;
       noteField.style.display = 'none';
-      dateInput?.parentNode?.appendChild(noteField);
+      dateInput.parentNode.appendChild(noteField);
     }
   }
 
   function updateNoteField() {
     const noteField = document.getElementById(noteFieldId);
-    if (noteField && dateInput && dateInput.value) {
+    if (noteField && dateInput.value) {
       noteField.value = `${notePrefix}${dateInput.value}`;
     }
   }
@@ -29,11 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
     selectors.forEach(selector => {
       document.querySelectorAll(selector).forEach(el => {
         el.disabled = shouldDisable;
-        if (shouldDisable) {
-          el.classList.add('is-disabled');
-        } else {
-          el.classList.remove('is-disabled');
-        }
+        el.classList.toggle('is-disabled', shouldDisable);
       });
     });
   }
@@ -46,27 +42,42 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  function saveDeliveryDateToCart(dateValue) {
+    fetch('/cart/update.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        attributes: {
+          "Delivery Date": dateValue
+        }
+      })
+    });
+  }
+
   function evaluateDateSelection() {
     const isValid = dateInput && dateInput.value;
     setDisabledState(targetsToDisable, !isValid);
     setVisibilityState(targetsToHide, !isValid);
     updateNoteField();
+    if (isValid) saveDeliveryDateToCart(dateInput.value);
   }
 
+  // Initial setup
   ensureNoteFieldExists();
   evaluateDateSelection();
 
+  // On date change
   dateInput.addEventListener('change', evaluateDateSelection);
 
+  // Restore saved value from Shopify
   fetch('/cart.js')
     .then(res => res.json())
     .then(data => {
-      const savedDate = data.attributes && data.attributes['Delivery Date'];
+      const savedDate = data.attributes?.['Delivery Date'];
       if (savedDate && !dateInput.value) {
         dateInput.value = savedDate;
+        updateNoteField();
+        evaluateDateSelection();
       }
-
-      updateNoteField();
-      evaluateDateSelection();
     });
 });
